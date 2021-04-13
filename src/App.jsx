@@ -1,52 +1,49 @@
-import P from "prop-types";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useState } from "react"
 
-const Post = ({ item, onClick }) => {
+const globalState = {
+  title: "O titulo do contexto",
+  body: "O body do contexto",
+  counter: 0
+}
+
+const GlobalContext = createContext();
+
+const Div = ({ children }) => {
   return (
-    <div key={item.id}>
-      <h1 onClick={() => {onClick(item.title)}}>{item.title}</h1>
-      <p>{item.body}</p>
-    </div>
+    <>
+    <H1 />
+    <P />
+    </>
+  )
+}
+
+const H1 = () => {
+  const theContext = useContext(GlobalContext);
+  const { title, counter } = theContext.providerState;
+
+  return (
+    <h1>{title}, {counter}</h1>
+  )
+}
+
+const P = () => {
+  const theContext = useContext(GlobalContext);
+  const { body } = theContext.providerState;
+  const { setProviderState } = theContext;
+
+  return (
+    <p onClick={() => setProviderState((s) => ({ ...s, counter: s.counter + 1 }))}>{body}</p>
   )
 }
 
 const App = () => {
-  const [posts, setPosts] = useState([]);
-  const [value, setValue] = useState("");
-  const input = useRef(null);
-
-  useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/posts")
-      .then((response) => response.json())
-      .then((response) => setPosts(response));
-  }, [])
-
-  useEffect(() => {
-    input.current.focus();
-    console.log(input.current);
-  }, [value])
-
-  const handleClick = (value) => {
-    setValue(value);
-  }
+  const [providerState, setProviderState] = useState(globalState);
 
   return (
-    <div className="App" style={{ textAlign: "center" }}>
-      <input ref={input} type="search" name="search" value={value} onChange={(e) => setValue(e.target.value)} />
-      {useMemo(() => (
-        posts.map((item) => (<Post key={item.id} item={item} onClick={handleClick} />))
-      ), [posts])}
-    </div>
+    <GlobalContext.Provider value={{ providerState, setProviderState }}>
+      <Div />
+    </GlobalContext.Provider>
   );
-}
-
-Post.propType = {
-  item: P.shape({
-    id: P.number,
-    title: P.string,
-    body: P.string,
-  }),
-  onClick: P.func
 }
 
 export default App;
